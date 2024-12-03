@@ -2,8 +2,6 @@ import initPool from '../databases/connection.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import axios from 'axios';
-import { reset } from 'nodemon';
-
 
 
 // Melakukan Generate OTP 6 Digit 
@@ -46,6 +44,34 @@ const sendOtpEmail = (email, otp, username) => {
         });
     });
 };
+
+
+//Format Email resend OTP
+const resendOtpEmail = (email, otp, username) => {
+    return new Promise((resolve, reject) => {
+        const mailTemplate = {
+            from: 'verifysweettracker@gmail.com',
+            to: email, 
+            subject: 'Kode OTP anda untuk ke aplikasi Sweet Tracker',
+            text: `Halo,\n\n` +
+            `Terima kasih telah mendaftar di aplikasi Sweet Tracker. Berikut adalah kode OTP untuk menyelesaikan proses verifikasi akun Anda:\n\n` +
+            `Kode OTP Anda adalah: ${otp}\n\n` +
+            `Harap masukkan kode OTP ini di aplikasi kami untuk melanjutkan pendaftaran. Kode ini hanya berlaku selama 5 menit.\n\n` +
+            `Jika Anda tidak merasa melakukan permintaan ini, harap abaikan email ini.\n\n` +
+            `Terima kasih,\n` +
+            `Tim Sweet Tracker\n`,
+        };
+
+        transporter.sendMail(mailTemplate, (error, info) => {
+            if (error) {
+                reject(`Email Error: ${error.message}`);
+            } else {
+                resolve('Email Sent');
+            }
+        });
+    });
+};
+
 
 
 // API untuk mengecek apakah email valid atau tidak
@@ -99,7 +125,7 @@ export const requestOTP = async (request, response) => {
         const hashpassword = crypto.createHash('sha256').update(password + salt).digest('hex');
 
         
-        await sendOtpEmail(email, otp); 
+        await sendOtpEmail(email, otp, username); 
 
         const pool = await initPool();
         const conn = await pool.getConnection();
@@ -177,30 +203,29 @@ export const verifyOTP = async (request,response) => {
 
 
 
-
 // Melakukan request ulang OTP ketika sudah kadaluarsa 5 menit
 export const resendingOTP = async (request, response) => {
     
     try {
 
-        const {email} = request.body
+        const {email,} = request.body
         const newotp = generateOtp();
         const newexpired = new Date(Date.now() + 5 *  60 * 1000);
 
-
+        
         const pool = await initPool();
         const conn = await pool.getConnection();
         const [query] = await conn.query(`UPDATE otp_codes SET otp_code = ?, expired_at = ? WHERE email = "${email}";`,[newotp,newexpired]);
         conn.release()
-
+        
         if (query.affectedRows == 0) {
             return response.status(404).json({
                 statusCode: 404,
                 message: 'Not Found',
             });
         }
-
-        await sendOtpEmail(email,newotp);
+        
+        await resendOtpEmail(email, newotp,); 
 
         return response.status(200).json({
             statusCode: 200,
