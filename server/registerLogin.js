@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
   });
 
 
-// Proses Pengiriman OTP
+// Proses Pengiriman OTP untuk registrasi
 const sendOtpEmail = (email, otp, username) => {
     return new Promise((resolve, reject) => {
         const mailTemplate = {
@@ -73,6 +73,31 @@ const resendOtpEmail = (email, otp, username) => {
 };
 
 
+//Format email untuk reset password
+const resetPasswordEmail = (email, newotp, username) => {
+    return new Promise((resolve, reject) => {
+        const mailTemplate = {
+            from: 'verifysweettracker@gmail.com',
+            to: email,
+            subject: 'Reset Password Sweet Tracker',
+            text: `Halo ${username},\n\n` +
+            `Kami menerima permintaan untuk mereset password akun Anda di aplikasi Sweet Tracker. Berikut adalah kode OTP untuk mereset password Anda:\n\n` +
+            `Kode OTP Anda adalah: ${newotp}\n\n` +
+            `Harap masukkan kode OTP ini di aplikasi kami untuk melanjutkan proses reset password. Kode ini hanya berlaku selama 5 menit.\n\n` +
+            `Jika Anda tidak merasa melakukan permintaan ini, harap abaikan email ini.\n\n` +
+            `Terima kasih,\n` +
+            `Tim Sweet Tracker\n`,
+            };
+
+            transporter.sendMail(mailTemplate, (error, info) => {
+                if (error) {
+                    reject(`Email Error: ${error.message}`);
+                } else {
+                    resolve('Email Sent');
+                }
+            })
+        })};
+
 
 // API untuk mengecek apakah email valid atau tidak
 const API_KEY = 'e766cc179b3c8d3f49594072b63e3f4f9cef7d22';
@@ -106,6 +131,7 @@ export const requestOTP = async (request, response) => {
         if (!email || !password || !username) {
             return response.status(400).json({
                 statusCode: 400,
+                error :'true',
                 message: 'Request Failed',
                 describe: 'Please Check Your Format'
             })
@@ -116,6 +142,7 @@ export const requestOTP = async (request, response) => {
         if (!emailYesOrNo) {
             return response.status(400).json({
                 statusCode: 400,
+                error :'true',
                 message: 'Email Error',
                 describe: 'Gagal mengirim email, periksa email yang dimasukkan'
             });
@@ -134,6 +161,7 @@ export const requestOTP = async (request, response) => {
         if (dbquery.affectedRows == 1) {
             return response.status(201).json({
                 statusCode: 201,
+                error :'false',
                 message: 'success',
                 describe: 'OTP berhasil dikirim silahkan cek email'
             });
@@ -165,6 +193,7 @@ export const verifyOTP = async (request,response) => {
         if (query.length == 0) {
             return response.status(401).json({
                 statusCode: 401,
+                error: 'true',
                 message: 'Unauthorized',
                 describe: 'Maaf Kode OTP Tidak Valid',
 
@@ -173,6 +202,7 @@ export const verifyOTP = async (request,response) => {
         }else if((new Date(query[0].expired_at) < dateNow )){
             return response.status(401).json({
                 statusCode: 401,
+                error: 'true',
                 message: 'Unauthorized',
                 describe: 'Maaf Kode OTP Kadaluarsa '
             });
@@ -185,6 +215,7 @@ export const verifyOTP = async (request,response) => {
             conn.release()
             return response.status(201).json({
                 statusCode: 201,
+                error :'false',
                 message: 'success',
                 describe: 'Registrasi Anda Berhasil Silahkan Login'
             })
@@ -221,6 +252,7 @@ export const resendingOTP = async (request, response) => {
         if (query.affectedRows == 0) {
             return response.status(404).json({
                 statusCode: 404,
+                error :'true',
                 message: 'Not Found',
             });
         }
@@ -229,6 +261,7 @@ export const resendingOTP = async (request, response) => {
 
         return response.status(200).json({
             statusCode: 200,
+            error :'false',
             message: 'success',
             describe: 'OTP sudah diperbarui cek ulang email anda'
         })
@@ -238,6 +271,7 @@ export const resendingOTP = async (request, response) => {
         if (error === 'Email Error') {
             return response.status(400).json({
                 statusCode: 400,
+                error :'true',
                 message: 'Email Error',
                 describe: 'Gagal mengirim email, periksa email yang dimasukkan'
             });
@@ -304,5 +338,66 @@ export const login = async (request, response) => {
             loginResult: null,
       });
     }
+
+}
+
+//Reset password based on email
+
+export const resetPassword = async (request, response) => {
+    
+        try {
+            const {email} = request.body;
+            const newotp = generateOtp();
+    
+            const pool = await initPool();
+            const conn = await pool.getConnection();
+            const [query] = await conn.query(`SELECT * FROM users WHERE user_email = ?;`,[email]);
+            conn.release();
+    
+            if (query.length === 0) {
+                return response.status(404).json({
+                    statusCode: 404,
+                    error :'true',
+                    message: 'Not Found',
+                    describe: 'Email Tidak Terdaftar'
+                });
+            }
+    
+            await resetPasswordEmail(email, newotp, query[0].username);
+    
+            const pool2 = await initPool();
+            const conn2 = await pool2.getConnection();
+            const [query2] = await conn2.query(`INSERT INTO otp_password (email,password,otp_password) VALUES ( ?, ?, ?, ?);`,[email,query[0].user_password,otp]);
+            conn2.release();
+    
+            if (query2.affectedRows == 1) {
+                return response.status(201).json({
+                    statusCode: 201,
+                    error :'false',
+                    message: 'success',
+                    describe: 'Kode OTP berhasil dikirim silahkan cek email'
+                });
+            }
+
+        const [result] = await conn.query('UPDATE users set user_password = ? WHERE user_email = ?;',[query[0].user_password,email])
+
+        if (result.affectedRows == 1) {
+            const [delOTP] = await conn.query('DELETE FROM otp_codes WHERE email = ?;',[email])
+            conn.release()
+            return response.status(201).json({
+                statusCode: 201,
+                error :'false',
+                message: 'success',
+                describe: 'Reset password berhasil silahkan login'
+            })
+        }
+    
+        } catch (error) {
+            console.error(error)
+            return response.status(500).json({
+                statusCode: 500,
+                message: 'Internal Server Error',
+            });
+        }
 
 }
