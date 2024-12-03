@@ -245,7 +245,7 @@ export const login = async (request, response) => {
         const conn = await pool.getConnection();
         const [query] = await conn.query(`SELECT * FROM users WHERE username = ? and user_password = ?;`,[username,hashpassword]);
         conn.release();
-
+        
         if (query.length == 0) {
             return response.status(404).json({
                 statusCode: 404,
