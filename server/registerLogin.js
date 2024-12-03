@@ -2,6 +2,7 @@ import initPool from '../databases/connection.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import axios from 'axios';
+import { reset } from 'nodemon';
 
 
 
@@ -14,20 +15,26 @@ const generateOtp = () => {
 const transporter = nodemailer.createTransport({
     service: 'gmail', 
     auth: {
-      user: 'vypssatu@gmail.com',  
-      pass: 'uvlv rkfa dfqm jvsm', 
+      user: 'verifysweettracker@gmail.com',  
+      pass: 'yjgu uljq cyme susa', 
     },
   });
 
 
 // Proses Pengiriman OTP
-const sendOtpEmail = (email, otp) => {
+const sendOtpEmail = (email, otp, username) => {
     return new Promise((resolve, reject) => {
         const mailTemplate = {
-            from: 'vypssatu@gmail.com',
+            from: 'verifysweettracker@gmail.com',
             to: email, 
             subject: 'Kode OTP anda untuk ke aplikasi Sweet Tracker',
-            text: `Kode OTP anda adalah ${otp}`,
+            text: `Halo ${username},\n\n` +
+            `Terima kasih telah mendaftar di aplikasi Sweet Tracker. Berikut adalah kode OTP untuk menyelesaikan proses verifikasi akun Anda:\n\n` +
+            `Kode OTP Anda adalah: ${otp}\n\n` +
+            `Harap masukkan kode OTP ini di aplikasi kami untuk melanjutkan pendaftaran. Kode ini hanya berlaku selama 5 menit.\n\n` +
+            `Jika Anda tidak merasa melakukan permintaan ini, harap abaikan email ini.\n\n` +
+            `Terima kasih,\n` +
+            `Tim Sweet Tracker\n`,
         };
 
         transporter.sendMail(mailTemplate, (error, info) => {
@@ -219,8 +226,6 @@ export const resendingOTP = async (request, response) => {
     }
 
 }
-
-
 
 
 // Login setelah melakukan registrasi
