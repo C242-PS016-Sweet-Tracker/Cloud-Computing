@@ -235,40 +235,44 @@ export const login = async (request, response) => {
 
         if (!username || !password) {
             return response.status(400).json({
-                statusCode: 400,
-                message: 'Request Failed',
-                describe: 'Please Check Your Format'
-            })
-        }
-
-        const pool = await initPool();
-        const conn = await pool.getConnection();
-        const [query] = await conn.query(`SELECT * FROM users WHERE username = ? and user_password = ?;`,[username,hashpassword]);
-        conn.release();
-        
-        if (query.length == 0) {
-            return response.status(404).json({
-                statusCode: 404,
-                message: 'Fail',
-                describe: 'User Not Found'
+              error: true,
+              message: "Request Failed. Please Check Your Format",
+              loginResult: null,
             });
-        }
-
-        return response.status(200).json({
-            statusCode: 200,
-            message: 'success',
-            id_users: query[0].user_id,
-            token: token
-        });
-
-    } catch (error) {
-
-        console.error(error)
-        return response.status(500).json({
-            statusCode: 500,
-            message: 'Internal Server Error',
-        });
+          }
+      
+          const pool = await initPool();
+          const conn = await pool.getConnection();
+          const [query] = await conn.query(`SELECT * FROM users WHERE username = ? AND user_password = ?;`,[username, hashpassword]
+      );
+          conn.release();
+      
+          if (query.length === 0) {
+            return response.status(404).json({
+              error: true,
+              message: "User Not Found",
+              loginResult: null,
+            });
+          }
+      
+          const loginResult = {
+            name: query[0].username,
+            userId: query[0].user_id,
+            token: token,
+          };
+      
+          return response.status(200).json({
+            error: false,
+            message: "success",
+            loginResult: loginResult,
+          });
+        } catch (error) {
+          console.error("Login Error:", error.message);
+          return response.status(500).json({
+            error: true,
+            message: "Internal Server Error",
+            loginResult: null,
+      });
     }
-
 
 }
