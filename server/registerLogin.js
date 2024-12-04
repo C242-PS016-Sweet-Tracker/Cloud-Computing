@@ -131,7 +131,7 @@ export const requestOTP = async (request, response) => {
         if (!email || !password || !username) {
             return response.status(400).json({
                 statusCode: 400,
-                error :'true',
+                error :true,
                 message: 'Request Failed',
                 describe: 'Please Check Your Format'
             })
@@ -143,7 +143,7 @@ export const requestOTP = async (request, response) => {
         if (!validator.isEmail(email)) {
             return response.status(400).json({
                 statusCode: 400,
-                error :'true',
+                error :true,
                 message: 'Request Failed',
                 describe: 'Format Email Fail'
             })
@@ -155,7 +155,7 @@ export const requestOTP = async (request, response) => {
         if (!emailYesOrNo) {
             return response.status(400).json({
                 statusCode: 400,
-                error :'true',
+                error :true,
                 message: 'Email Error',
                 describe: 'Gagal mengirim email, periksa email yang dimasukkan'
             });
@@ -170,7 +170,7 @@ export const requestOTP = async (request, response) => {
         if (user_cek.length == 1 || email_cek.length == 1) {
             return response.status(409).json({
                 statusCode: 409,
-                error :'true',
+                error :true,
                 message: 'Fail',
                 describe: 'Users or Email Conflic'
             });
@@ -189,7 +189,7 @@ export const requestOTP = async (request, response) => {
         if (dbquery.affectedRows == 1) {
             return response.status(201).json({
                 statusCode: 201,
-                error :'false',
+                error :false,
                 message: 'success',
                 describe: 'OTP berhasil dikirim silahkan cek email'
             });
@@ -198,6 +198,7 @@ export const requestOTP = async (request, response) => {
         console.error(error)
         return response.status(500).json({
             statusCode: 500,
+            error: true,
             message: 'Internal Server Error',
         });
     }
@@ -217,7 +218,7 @@ export const verifyOTP = async (request,response) => {
         if (!otp) {
             return response.status(400).json({
                 statusCode: 400,
-                error :'true',
+                error :true,
                 message: 'OTP Error',
                 describe: 'OTP Kosong'
             });
@@ -230,7 +231,7 @@ export const verifyOTP = async (request,response) => {
         if (query.length == 0) {
             return response.status(401).json({
                 statusCode: 401,
-                error: 'true',
+                error: true,
                 message: 'Unauthorized',
                 describe: 'Maaf Kode OTP Tidak Valid',
 
@@ -239,7 +240,7 @@ export const verifyOTP = async (request,response) => {
         }else if((new Date(query[0].expired_at) < dateNow )){
             return response.status(401).json({
                 statusCode: 401,
-                error: 'true',
+                error: true,
                 message: 'Unauthorized',
                 describe: 'Maaf Kode OTP Kadaluarsa '
             });
@@ -252,7 +253,7 @@ export const verifyOTP = async (request,response) => {
             conn.release()
             return response.status(201).json({
                 statusCode: 201,
-                error :'false',
+                error :false,
                 message: 'success',
                 describe: 'Registrasi Anda Berhasil Silahkan Login'
             })
@@ -263,6 +264,7 @@ export const verifyOTP = async (request,response) => {
         console.error(error)
         return response.status(500).json({
             statusCode: 500,
+            error: true,
             message: 'Internal Server Error',
         });
     }
@@ -298,7 +300,7 @@ export const resendingOTP = async (request, response) => {
         if (query.affectedRows == 0) {
             return response.status(404).json({
                 statusCode: 404,
-                error :'true',
+                error :true,
                 message: 'Not Found',
             });
         }
@@ -307,7 +309,7 @@ export const resendingOTP = async (request, response) => {
 
         return response.status(200).json({
             statusCode: 200,
-            error :'false',
+            error :false,
             message: 'success',
             describe: 'OTP sudah diperbarui cek ulang email anda'
         })
@@ -317,7 +319,7 @@ export const resendingOTP = async (request, response) => {
         if (error === 'Email Error') {
             return response.status(400).json({
                 statusCode: 400,
-                error :'true',
+                error :true,
                 message: 'Email Error',
                 describe: 'Gagal mengirim email, periksa email yang dimasukkan'
             });
@@ -326,6 +328,7 @@ export const resendingOTP = async (request, response) => {
         console.error(error)
         return response.status(500).json({
             statusCode: 500,
+            error: true,
             message: 'Internal Server Error',
         });
     }
@@ -435,7 +438,7 @@ export const resetPasswordOTP = async (request, response) => {
             if (query.length === 0) {
                 return response.status(404).json({
                     statusCode: 404,
-                    error :'true',
+                    error :true,
                     message: 'Not Found',
                     describe: 'Email Tidak Terdaftar'
                 });
@@ -452,7 +455,7 @@ export const resetPasswordOTP = async (request, response) => {
             if (query2.affectedRows == 1) {
                 return response.status(201).json({
                     statusCode: 201,
-                    error :'false',
+                    error :false,
                     message: 'success',
                     describe: 'Kode OTP berhasil dikirim silahkan cek email'
                 });
@@ -462,6 +465,7 @@ export const resetPasswordOTP = async (request, response) => {
             console.error(error)
             return response.status(500).json({
                 statusCode: 500,
+                error:true,
                 message: 'Internal Server Error',
             });
         }
@@ -505,7 +509,7 @@ export const verifyOTPpass = async (request, response) => {
             conn.release();
             return response.status(201).json({
                 statusCode: 201,
-                error :'false',
+                error :false,
                 message: 'success',
                 describe: 'Password Berhasil Di reset'
             })
@@ -515,6 +519,7 @@ export const verifyOTPpass = async (request, response) => {
         console.error(error)
         return response.status(500).json({
             statusCode: 500,
+            error:true,
             message: 'Internal Server Error',
         });
     }
