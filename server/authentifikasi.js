@@ -7,7 +7,7 @@ router.post('/requestOTP',requestOTP)
 router.post('/verifyOTP',verifyOTP)
 router.post('/resendingOTP',resendingOTP)
 router.post('/login',login)
-router.post('/resendingOTPpassword',resetPasswordOTP)
+router.post('/OTPResetpassword',resetPasswordOTP)
 router.post('/verifyResetPass', verifyOTPpass)
 
 
