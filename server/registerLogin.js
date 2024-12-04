@@ -485,7 +485,7 @@ export const verifyOTPpass = async (request, response) => {
               statusCode:400,
               error: true,
               message: "Request Failed. Please Check Your Format",
-              loginResult: null,
+            //   loginResult: null,
             });
           }
 
