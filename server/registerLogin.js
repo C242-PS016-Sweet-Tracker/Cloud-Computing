@@ -86,6 +86,7 @@ const resetPasswordEmail = (email, newotp, username) => {
             `Kode OTP Anda adalah: ${newotp}\n\n` +
             `Harap masukkan kode OTP ini di aplikasi kami untuk melanjutkan proses reset password.\n\n` +
             `Jika Anda tidak merasa melakukan permintaan ini, harap abaikan email ini.\n\n` +
+            `Mohon untuk tidak membagikan kode OTP ini kepada orang lain!.\n\n` +
             `Terima kasih,\n` +
             `Tim Sweet Tracker\n`,
             };
