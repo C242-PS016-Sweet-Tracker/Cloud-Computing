@@ -2,6 +2,7 @@ import initPool from '../databases/connection.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import axios from 'axios';
+import validator from 'validator';
 
 
 // Melakukan Generate OTP 6 Digit 
@@ -47,7 +48,7 @@ const sendOtpEmail = (email, otp, username) => {
 
 
 //Format Email resend OTP
-const resendOtpEmail = (email, otp, username) => {
+const resendOtpEmail = (email, otp) => {
     return new Promise((resolve, reject) => {
         const mailTemplate = {
             from: 'verifysweettracker@gmail.com',
@@ -125,9 +126,7 @@ export const requestOTP = async (request, response) => {
         const {username,email,password} = request.body;
         const otp = generateOtp();
 
-        // Validasi Menggunakan '@' pada email
-        // Validasi cek User sudah ada apa belum
-
+        //validasi form kosong atau tidak
         if (!email || !password || !username) {
             return response.status(400).json({
                 statusCode: 400,
@@ -138,6 +137,19 @@ export const requestOTP = async (request, response) => {
             
         }
 
+        // Validasi Menggunakan '@' pada email
+
+        if (!validator.isEmail(email)) {
+            return response.status(400).json({
+                statusCode: 400,
+                error :'true',
+                message: 'Request Failed',
+                describe: 'Format Email Fail'
+            })
+            
+        }
+        
+        // Validasi Email benar ada atau fake
         const emailYesOrNo = await validOrNoEmail(email);
         if (!emailYesOrNo) {
             return response.status(400).json({
@@ -148,14 +160,29 @@ export const requestOTP = async (request, response) => {
             });
         }
 
+        // Validasi cek User sudah ada apa belum
+        const pool = await initPool();
+        const conn = await pool.getConnection();
+        const [user_cek] = await conn.query(`SELECT username FROM users WHERE username = ?;`,[username]);
+        const [email_cek] = await conn.query(`SELECT user_email FROM users WHERE user_email = ?;`,[email]);
+
+        if (user_cek.length == 1 || email_cek.length == 1) {
+            return response.status(409).json({
+                statusCode: 409,
+                error :'true',
+                message: 'Fail',
+                describe: 'Users or Email Conflic'
+            });
+        }
+
+
         const salt = "sjdgegywgyryygww1233uew3723623627"
         const hashpassword = crypto.createHash('sha256').update(password + salt).digest('hex');
 
         
         await sendOtpEmail(email, otp, username); 
 
-        const pool = await initPool();
-        const conn = await pool.getConnection();
+       
         const [dbquery] = await conn.query(`INSERT INTO otp_codes (username,email,password,otp_code,expired_at) VALUES (?, ?, ?, ?, ?);`,[username,email,hashpassword,otp,expired]);
         conn.release();
         if (dbquery.affectedRows == 1) {
@@ -185,6 +212,15 @@ export const verifyOTP = async (request,response) => {
 
         const {email,otp} = request.body;
         const dateNow = new Date();
+
+        if (!otp) {
+            return response.status(400).json({
+                statusCode: 400,
+                error :'true',
+                message: 'OTP Error',
+                describe: 'OTP Kosong'
+            });
+        }
         
         const pool = await initPool();
         const conn = await pool.getConnection();
@@ -243,6 +279,15 @@ export const resendingOTP = async (request, response) => {
         const newotp = generateOtp();
         const newexpired = new Date(Date.now() + 5 *  60 * 1000);
 
+        if (!email) {
+            return response.status(400).json({
+              statusCode:400,
+              error: true,
+              message: "Request Failed. Please Check Your Format",
+              loginResult: null,
+            });
+          }
+
         
         const pool = await initPool();
         const conn = await pool.getConnection();
@@ -257,7 +302,7 @@ export const resendingOTP = async (request, response) => {
             });
         }
         
-        await resendOtpEmail(email, newotp,); 
+        await resendOtpEmail(email, newotp); 
 
         return response.status(200).json({
             statusCode: 200,
@@ -292,45 +337,68 @@ export const login = async (request, response) => {
 
     try {
 
-        const {username,password} = request.body
+        const {usernameOrEmail,password} = request.body
         const salt = "sjdgegywgyryygww1233uew3723623627"
         const hashpassword = crypto.createHash('sha256').update(password + salt).digest('hex');
         const token = crypto.randomBytes(8).toString('hex');
 
-        if (!username || !password) {
+        if (!usernameOrEmail || !password) {
             return response.status(400).json({
               error: true,
               message: "Request Failed. Please Check Your Format",
               loginResult: null,
             });
           }
-      
-          const pool = await initPool();
-          const conn = await pool.getConnection();
-          const [query] = await conn.query(`SELECT * FROM users WHERE username = ? AND user_password = ?;`,[username, hashpassword]
-      );
-          conn.release();
-      
-          if (query.length === 0) {
-            return response.status(404).json({
-              error: true,
-              message: "User Not Found",
-              loginResult: null,
+
+        const pool = await initPool();
+        const conn = await pool.getConnection();
+
+        if (validator.isEmail(usernameOrEmail)) {
+            const [query] = await conn.query(`SELECT * FROM users WHERE user_email = ? AND user_password = ?;`,[usernameOrEmail, hashpassword]);
+            if (query.length === 0) {
+                return response.status(404).json({
+                  error: true,
+                  message: "User Not Found",
+                  loginResult: null,
+                });
+            }
+            const loginResult = {
+                name: query[0].username,
+                userId: query[0].user_id,
+                token: token,
+            };
+          
+            return response.status(200).json({
+                error: false,
+                message: "success",
+                loginResult: loginResult,
             });
-          }
+
+        }else{
+            const [query] = await conn.query(`SELECT * FROM users WHERE username = ? AND user_password = ?;`,[usernameOrEmail, hashpassword]);
+            if (query.length === 0) {
+                return response.status(404).json({
+                  error: true,
+                  message: "User Not Found",
+                  loginResult: null,
+                });
+            }
+            conn.release();
       
-          const loginResult = {
-            name: query[0].username,
-            userId: query[0].user_id,
-            token: token,
-          };
+            const loginResult = {
+              name: query[0].username,
+              userId: query[0].user_id,
+              token: token,
+            };
+        
+            return response.status(200).json({
+              error: false,
+              message: "success",
+              loginResult: loginResult,
+            });
+        }
       
-          return response.status(200).json({
-            error: false,
-            message: "success",
-            loginResult: loginResult,
-          });
-        } catch (error) {
+    } catch (error) {
           console.error("Login Error:", error.message);
           return response.status(500).json({
             error: true,
@@ -343,11 +411,20 @@ export const login = async (request, response) => {
 
 //Reset password based on email
 
-export const resetPassword = async (request, response) => {
+export const resetPasswordOTP = async (request, response) => {
     
         try {
             const {email} = request.body;
             const newotp = generateOtp();
+
+            if (!email) {
+                return response.status(400).json({
+                  statusCode: 400,
+                  error: true,
+                  message: "Request Failed. Please Check Your Format",
+                  loginResult: null,
+                });
+              }
     
             const pool = await initPool();
             const conn = await pool.getConnection();
@@ -363,12 +440,13 @@ export const resetPassword = async (request, response) => {
                 });
             }
     
-            await resetPasswordEmail(email, newotp, query[0].username);
-    
+            
             const pool2 = await initPool();
             const conn2 = await pool2.getConnection();
-            const [query2] = await conn2.query(`INSERT INTO otp_password (email,password,otp_password) VALUES ( ?, ?, ?, ?);`,[email,query[0].user_password,otp]);
+            const [query2] = await conn2.query(`INSERT INTO otp_password (email,password,otp_password) VALUES ( ?, ?, ?);`,[email,query[0].user_password,newotp]);
             conn2.release();
+
+            await resetPasswordEmail(email, newotp, query[0].username);
     
             if (query2.affectedRows == 1) {
                 return response.status(201).json({
@@ -378,19 +456,6 @@ export const resetPassword = async (request, response) => {
                     describe: 'Kode OTP berhasil dikirim silahkan cek email'
                 });
             }
-
-        const [result] = await conn.query('UPDATE users set user_password = ? WHERE user_email = ?;',[query[0].user_password,email])
-
-        if (result.affectedRows == 1) {
-            const [delOTP] = await conn.query('DELETE FROM otp_codes WHERE email = ?;',[email])
-            conn.release()
-            return response.status(201).json({
-                statusCode: 201,
-                error :'false',
-                message: 'success',
-                describe: 'Reset password berhasil silahkan login'
-            })
-        }
     
         } catch (error) {
             console.error(error)
@@ -399,5 +464,59 @@ export const resetPassword = async (request, response) => {
                 message: 'Internal Server Error',
             });
         }
+
+}
+
+export const verifyOTPpass = async (request, response) => {
+
+    try {
+
+        const {otp,password} = request.body;
+        const salt = "sjdgegywgyryygww1233uew3723623627"
+        const hashpassword = crypto.createHash('sha256').update(password + salt).digest('hex');
+
+        if (!otp || !password) {
+            return response.status(400).json({
+              statusCode:400,
+              error: true,
+              message: "Request Failed. Please Check Your Format",
+              loginResult: null,
+            });
+          }
+
+        const pool = await initPool()
+        const conn = await pool.getConnection();
+        const [query] = await conn.query(`SELECT * FROM otp_password WHERE otp_password = ?;`,[otp]);
+        
+
+        if (query.length == 0) {
+            return response.status(404).json({
+                statusCode: 404,
+                error: true,
+                message: 'Fail',
+                describe: 'Not Found'
+            });
+        }
+
+        const [result] = await conn.query(`UPDATE users SET user_password = ?  WHERE user_email = "${query[0].email}";`,[hashpassword]);
+        if (result.affectedRows == 1) {
+            const [delOTP] = await conn.query('DELETE FROM otp_password WHERE otp_password = ?;',[otp]);
+            conn.release();
+            return response.status(201).json({
+                statusCode: 201,
+                error :'false',
+                message: 'success',
+                describe: 'Password Berhasil Di reset'
+            })
+
+        }
+    } catch (error) {
+        console.error(error)
+        return response.status(500).json({
+            statusCode: 500,
+            message: 'Internal Server Error',
+        });
+    }
+
 
 }
