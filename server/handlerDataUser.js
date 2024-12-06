@@ -85,10 +85,10 @@ export const addDetailUser = async (request, response) => {
 export const editDetailUser = async (request, response) => {
     try {
         const user_id = request.params.user_id;
-        const {namaLengkap,jenisKelaminumur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori} = request.body;
+        const {namaLengkap,jenisKelamin,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori} = request.body;
 
         if (!namaLengkap || !jenisKelamin  || !umur || !tinggiBadan || !beratBadan || 
-            !tingkatAktifitas || !tipeDiabetes || !kadarGula || !kalori) {
+            !tingkatAktifitas || !tipeDiabetes || !kadarGula || kalori) {
             return response.status(400).json({
                 statusCode: 400,
                 error: true,
