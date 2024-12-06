@@ -25,7 +25,7 @@ export const getProfilUsers = async (request,response) => {
             statusCode: 200,
             error: false,
             message: 'success',
-            data: query
+            data: query[0]
         });
     } catch (error) {
         console.log(error);
