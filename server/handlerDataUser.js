@@ -35,9 +35,9 @@ export const getDetailUser = async (request,response) => {
 
 export const addDetailUser = async (request, response) => {
     try {
-        const {namaLengkap,jenisKelamin,tanggalLahir,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id} = request.body;
+        const {namaLengkap,jenisKelamin,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id} = request.body;
 
-        if (!namaLengkap || !jenisKelamin || !tanggalLahir || !umur || !tinggiBadan || !beratBadan || 
+        if (!namaLengkap || !jenisKelamin || !umur || !tinggiBadan || !beratBadan || 
             !tingkatAktifitas || !tipeDiabetes || !kadarGula || !kalori || !user_id) {
             return response.status(400).json({
                 statusCode: 400,
@@ -52,8 +52,7 @@ export const addDetailUser = async (request, response) => {
         const [query] = await conn.query(
             `INSERT INTO detail_user (
                 nama_lengkap_user, 
-                jenis_kelamin, 
-                tanggal_lahir, 
+                jenis_kelamin,  
                 user_umur, 
                 tinggi_badan, 
                 berat_badan, 
@@ -62,7 +61,7 @@ export const addDetailUser = async (request, response) => {
                 kadar_gula, 
                 kalori, 
                 user_id
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?);`,[namaLengkap,jenisKelamin,tanggalLahir,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id]);
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?);`,[namaLengkap,jenisKelamin,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id]);
         conn.release();
         if (query.affectedRows == 1) {
             return response.status(201).json({
@@ -86,9 +85,9 @@ export const addDetailUser = async (request, response) => {
 export const editDetailUser = async (request, response) => {
     try {
         const user_id = request.params.user_id;
-        const {namaLengkap,jenisKelamin,tanggalLahir,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori} = request.body;
+        const {namaLengkap,jenisKelaminumur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori} = request.body;
 
-        if (!namaLengkap || !jenisKelamin || !tanggalLahir || !umur || !tinggiBadan || !beratBadan || 
+        if (!namaLengkap || !jenisKelamin  || !umur || !tinggiBadan || !beratBadan || 
             !tingkatAktifitas || !tipeDiabetes || !kadarGula || !kalori) {
             return response.status(400).json({
                 statusCode: 400,
@@ -105,7 +104,6 @@ export const editDetailUser = async (request, response) => {
              SET 
                 nama_lengkap_user = ?, 
                 jenis_kelamin = ?, 
-                tanggal_lahir = ?, 
                 user_umur = ?, 
                 tinggi_badan = ?, 
                 berat_badan = ?, 
@@ -114,7 +112,7 @@ export const editDetailUser = async (request, response) => {
                 kadar_gula = ?, 
                 kalori = ? 
              WHERE user_id = ${user_id};`,
-            [namaLengkap, jenisKelamin, tanggalLahir, umur, tinggiBadan, beratBadan, tingkatAktifitas, tipeDiabetes, kadarGula, kalori]
+            [namaLengkap, jenisKelamin, umur, tinggiBadan, beratBadan, tingkatAktifitas, tipeDiabetes, kadarGula, kalori]
         );
         if (query.affectedRows == 1) {
             response.status(200).json({
