@@ -35,10 +35,21 @@ export const getDetailUser = async (request,response) => {
 
 export const addDetailUser = async (request, response) => {
     try {
-        const {namaLengkap,jenisKelamin,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id} = request.body;
+        const {
+            namaLengkap,
+            jenisKelamin,
+            umur,
+            tinggiBadan,
+            beratBadan,
+            tingkatAktifitas,
+            tipeDiabetes,
+            kadarGula,
+            user_id
+        } = request.body;
 
+        // Validasi input
         if (!namaLengkap || !jenisKelamin || !umur || !tinggiBadan || !beratBadan || 
-            !tingkatAktifitas || !tipeDiabetes || !kadarGula || !kalori || !user_id) {
+            !tingkatAktifitas || !tipeDiabetes || !kadarGula || !user_id) {
             return response.status(400).json({
                 statusCode: 400,
                 error: true,
@@ -59,11 +70,13 @@ export const addDetailUser = async (request, response) => {
                 tingkat_aktivitas, 
                 tipe_diabetes, 
                 kadar_gula, 
-                kalori, 
                 user_id
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?);`,[namaLengkap,jenisKelamin,umur,tinggiBadan,beratBadan,tingkatAktifitas,tipeDiabetes,kadarGula,kalori,user_id]);
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+            [namaLengkap, jenisKelamin, umur, tinggiBadan, beratBadan, tingkatAktifitas, tipeDiabetes, kadarGula, user_id]
+        );
         conn.release();
-        if (query.affectedRows == 1) {
+
+        if (query.affectedRows === 1) {
             return response.status(201).json({
                 statusCode: 200,
                 error: false,
@@ -72,15 +85,15 @@ export const addDetailUser = async (request, response) => {
             });
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return response.status(500).json({
             statusCode: 500,
             error: true,
             message: 'Internal Server Error',
         });
     }
+};
 
-}
 
 export const editDetailUser = async (request, response) => {
     try {
