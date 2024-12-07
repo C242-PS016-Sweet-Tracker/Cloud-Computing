@@ -96,7 +96,7 @@ export const editProfilUsers = async (request,response) => {
                 }
             } else {
                 const { originalname, mimetype, buffer } = request.file;
-                const fileName = Date.now() + '-' + originalname + '-' + user_id;
+                const fileName = Date.now() + '-' + user_id;
                 const uploadFile = bucket.file(fileName);
             
                 await uploadFile.save(buffer, {
@@ -151,7 +151,7 @@ export const editProfilUsers = async (request,response) => {
                     }
                 }else{
                     const { originalname, mimetype, buffer } = request.file;
-                    const fileName = Date.now() + '-' + originalname + '-' + user_id;
+                    const fileName = Date.now() + '-' + user_id;
                     const uploadFile = bucket.file(fileName);
                 
                     await uploadFile.save(buffer, {
