@@ -35,6 +35,8 @@ export const getDetailUser = async (request,response) => {
 
 export const addDetailUser = async (request, response) => {
     try {
+        const pool = await initPool();
+        const conn = await pool.getConnection();
         const {
             namaLengkap,
             jenisKelamin,
@@ -57,9 +59,19 @@ export const addDetailUser = async (request, response) => {
                 describe: 'check your format'
             });
         }
+
+        //validasi jika user_id sama
+        const [query2] = await conn.query(`SELECT * FROM detail_user WHERE user_id = ${user_id};`);
+        if (query2.length == 1) {
+            return response.status(409).json({
+                statusCode: 409,
+                error: true,
+                message: 'Fail',
+                describe: 'Data Conflig'
+            })
+        }
     
-        const pool = await initPool();
-        const conn = await pool.getConnection();
+        
         const [query] = await conn.query(
             `INSERT INTO detail_user (
                 nama_lengkap_user, 
