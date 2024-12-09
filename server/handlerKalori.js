@@ -162,3 +162,56 @@ export const updateKaloriHarian = async (request, response) => {
     }
 
 }
+
+// Fungsi untuk dipanggil via cron (tanpa req dan res)
+export const delete24jamCron = async () => {
+    try {
+      const pool = await initPool();
+      const conn = await pool.getConnection();
+  
+      const [result] = await conn.query('UPDATE detail_user SET kalori_harian = 0');
+      
+      conn.release();
+  
+      if (result.affectedRows > 0) {
+        console.log('Kalori Harian berhasil di-reset untuk semua pengguna.');
+      } else {
+        console.log('Tidak ada data yang ditemukan untuk di-reset.');
+      }
+    } catch (error) {
+      console.error('Terjadi kesalahan saat mereset kalori harian di cron job:', error);
+    }
+  };
+  
+  // Fungsi untuk dipanggil via HTTP request (dengan req dan res)
+  export const delete24jam = async (req, res) => {
+    try {
+      const pool = await initPool();
+      const conn = await pool.getConnection();
+  
+      const [result] = await conn.query('UPDATE detail_user SET kalori_harian = 0');
+      
+      conn.release();
+  
+      if (result.affectedRows > 0) {
+        res.status(200).json({
+          statusCode: 200,
+          error: false,
+          message: 'Kalori Harian berhasil di-reset untuk semua pengguna.',
+        });
+      } else {
+        res.status(404).json({
+          statusCode: 404,
+          error: true,
+          message: 'Tidak ada data yang ditemukan untuk di-reset.',
+        });
+      }
+    } catch (error) {
+      console.error('Terjadi kesalahan saat mereset kalori harian:', error);
+      res.status(500).json({
+        statusCode: 500,
+        error: true,
+        message: 'Internal Server Error',
+      });
+    }
+  };
