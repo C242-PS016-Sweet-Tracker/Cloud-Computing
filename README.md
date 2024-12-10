@@ -1,4 +1,4 @@
-Hello! Welcome to our Capstone Project. This repository is part of our Capstone's Cloud Computing. It contains API for our mobile Application, feel free to explore this repository!
+Hello! Welcome to our Capstone Project (C242-PS016). This repository is part of our Capstone's Cloud Computing. It contains API for our mobile Application, feel free to explore this repository!
 
 <h1 style="text-align: center;">Sweet Tracker API  </h1>
 
