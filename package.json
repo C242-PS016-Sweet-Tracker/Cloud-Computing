@@ -14,14 +14,19 @@
   "dependencies": {
     "@google-cloud/cloud-sql-connector": "^1.4.0",
     "@google-cloud/storage": "^7.14.0",
+    "@vitalets/google-translate-api": "^9.2.0",
     "axios": "^1.7.8",
+    "cron": "^3.3.0",
     "dotenv": "^16.4.7",
     "email-existence": "^0.1.6",
     "express": "^4.21.1",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.5",
+    "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "nodemon": "^3.1.7",
+    "translate": "^3.0.1",
+    "translate-google": "^1.5.0",
     "validator": "^13.12.0"
   }
 }
