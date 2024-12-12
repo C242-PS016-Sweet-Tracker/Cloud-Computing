@@ -123,6 +123,9 @@ export const getKaloriHarian = async (request,response) => {
 export const updateKaloriHarian = async (request, response) => {
     
     try {
+        const pool = await initPool();
+        const conn = await pool.getConnection();
+
         const user_id = request.params.user_id;
         const {kaloriAdd} = request.body;
         if (!kaloriAdd) {
@@ -133,8 +136,17 @@ export const updateKaloriHarian = async (request, response) => {
                 describe: 'check your format'
             });
         }
-        const pool = await initPool();
-        const conn = await pool.getConnection();
+
+        const [cekkalori] = await conn.query(`SELECT kalori,kalori_harian FROM detail_user WHERE user_id = ${user_id};`)
+        if (cekkalori[0].kalori_harian + kaloriAdd > cekkalori[0].kalori) {
+            return response.status(400).json({
+                statusCode: 400,
+                error: true,
+                message: 'fail',
+                describe: 'jika anda memakan makanan ini maka melebihi kalori harian anda'
+            })
+        }
+
         const [query] = await conn.query(`UPDATE detail_user SET kalori_harian = kalori_harian + ? WHERE user_id = ?;`,[kaloriAdd, user_id]);
         conn.release();
         if (query.affectedRows == 0) {
@@ -173,11 +185,11 @@ export const delete24jamCron = async () => {
       
       conn.release();
   
-      if (result.affectedRows > 0) {
-        console.log('Kalori Harian berhasil di-reset untuk semua pengguna.');
-      } else {
-        console.log('Tidak ada data yang ditemukan untuk di-reset.');
-      }
+    //   if (result.affectedRows > 0) {
+    //     console.log('Kalori Harian berhasil di-reset untuk semua pengguna.');
+    //   } else {
+    //     console.log('Tidak ada data yang ditemukan untuk di-reset.');
+    //   }
     } catch (error) {
       console.error('Terjadi kesalahan saat mereset kalori harian di cron job:', error);
     }
