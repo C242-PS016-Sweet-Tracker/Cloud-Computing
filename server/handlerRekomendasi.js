@@ -42,7 +42,7 @@ export const rekomendasi = async (request, response) => {
             statusCode: 200,
             error: false,
             message: 'success',
-            rekomendasi: result2
+            rekomendasi: result2[0]
         })
     } catch (error) {
         console.log("Error:", error);
