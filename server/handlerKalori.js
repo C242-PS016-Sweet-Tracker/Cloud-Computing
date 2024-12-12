@@ -55,7 +55,7 @@ export const getKalori = async (request,response) => {
 
         const user_id = request.params.user_id;
         const [query] = await conn.query(`
-            SELECT users.username, detail_user.kalori, detail_user.kalori_harian FROM detail_user 
+            SELECT users.username, detail_user.kalori, detail_user.kalori_harian, detail_user.tipe_diabetes  FROM detail_user 
             INNER JOIN users
             ON users.user_id = detail_user.user_id
             WHERE detail_user.user_id = ${user_id};
