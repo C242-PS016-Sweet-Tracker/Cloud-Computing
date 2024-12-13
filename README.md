@@ -2,7 +2,14 @@ Hello! Welcome to our Capstone Project (C242-PS016). This repository is part of 
 
 <h1 style="text-align: center;">Sweet Tracker API  </h1>
 
+
 Step by step to run our API:
+<br><br>
+
+<h3>IMPORTANT</h3><br>
+Please download or clone the API file, then open the folder, go to the server folder, create a 'keys' folder, then download the credentials file in the form of json from the Google Cloud service account with the Storage Object Admin role, then put the file in the 'keys' folder and change the name to credentialsFoto.json
+
+<br><br>
 
 <br>
 
